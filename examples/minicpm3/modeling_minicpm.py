@@ -976,11 +976,11 @@ class MiniCPM3Model(MiniCPM3PreTrainedModel):
                 use_cache = False
 
         past_key_values_length = 0
-        if use_cache:
-            use_legacy_cache = not isinstance(past_key_values, Cache)
-            if use_legacy_cache:
-                past_key_values = DynamicCache.from_legacy_cache(past_key_values)
-            past_key_values_length = past_key_values.get_usable_length(seq_length)
+        # if use_cache:
+        #     use_legacy_cache = not isinstance(past_key_values, Cache)
+        #     if use_legacy_cache:
+        #         past_key_values = DynamicCache.from_legacy_cache(past_key_values)
+        #     past_key_values_length = past_key_values.get_usable_length(seq_length)
 
         if position_ids is None:
             position_ids = ops.arange(
@@ -1047,8 +1047,8 @@ class MiniCPM3Model(MiniCPM3PreTrainedModel):
             all_hidden_states += (hidden_states,)
 
         next_cache = None
-        if use_cache:
-            next_cache = next_decoder_cache.to_legacy_cache() if use_legacy_cache else next_decoder_cache
+        # if use_cache:
+        #     next_cache = next_decoder_cache.to_legacy_cache() if use_legacy_cache else next_decoder_cache
         if not return_dict:
             return tuple(v for v in [hidden_states, next_cache, all_hidden_states, all_self_attns] if v is not None)
         return BaseModelOutputWithPast(
