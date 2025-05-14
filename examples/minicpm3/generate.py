@@ -20,7 +20,7 @@ ms.set_seed(0)
 path = "openbmb/MiniCPM3-4B"
 
 tokenizer = AutoTokenizer.from_pretrained(path, trust_remote_code=True)
-model = MiniCPM3ForCausalLM.from_pretrained(path, mindspore_dtype=ms.bfloat16)
+model = MiniCPM3ForCausalLM.from_pretrained(path, mindspore_dtype=ms.bfloat16, revision="refs/pr/41")
 
 messages = [
     {"role": "user", "content": "推荐5个北京的景点。"},
@@ -28,11 +28,13 @@ messages = [
 model_inputs = tokenizer.apply_chat_template(messages, return_tensors="np", add_generation_prompt=True)
 model_inputs = ms.tensor(model_inputs)
 
+# top_p=0.7,
+# temperature=0.7
+
 model_outputs = model.generate(
     model_inputs,
     max_new_tokens=1024,
-    top_p=0.7,
-    temperature=0.7
+    use_cache=False,
 )
 
 output_token_ids = [
