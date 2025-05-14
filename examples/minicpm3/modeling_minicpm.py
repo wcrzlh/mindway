@@ -379,7 +379,7 @@ class MiniCPMAttention(nn.Cell):
                 raise ValueError(f"Unknown RoPE scaling type {scaling_type}")
 
     def _shape(self, tensor: ms.Tensor, seq_len: int, bsz: int):
-        return tensor.view(bsz, seq_len, self.num_heads, self.v_head_dim).transpose(1, 2).contiguous()
+        return tensor.view(bsz, seq_len, self.num_heads, self.v_head_dim).swapaxes(1, 2).contiguous()
 
     def construct(
             self,
@@ -399,7 +399,7 @@ class MiniCPMAttention(nn.Cell):
         bsz, q_len, _ = hidden_states.shape
 
         q = self.q_b_proj(self.q_a_layernorm(self.q_a_proj(hidden_states)))
-        q = q.view(bsz, q_len, self.num_heads, self.q_head_dim).transpose(1, 2)
+        q = q.view(bsz, q_len, self.num_heads, self.q_head_dim).swapaxes(1, 2)
         q_nope, q_pe = mint.split(
             q, [self.qk_nope_head_dim, self.qk_rope_head_dim], dim=-1
         )
@@ -408,11 +408,11 @@ class MiniCPMAttention(nn.Cell):
         compressed_kv, k_pe = mint.split(
             compressed_kv, [self.kv_lora_rank, self.qk_rope_head_dim], dim=-1
         )
-        k_pe = k_pe.view(bsz, q_len, 1, self.qk_rope_head_dim).transpose(1, 2)
+        k_pe = k_pe.view(bsz, q_len, 1, self.qk_rope_head_dim).swapaxes(1, 2)
         kv = (
             self.kv_b_proj(self.kv_a_layernorm(compressed_kv))
             .view(bsz, q_len, self.num_heads, self.qk_nope_head_dim + self.v_head_dim)
-            .transpose(1, 2)
+            .swapaxes(1, 2)
         )
 
         k_nope, value_states = mint.split(
@@ -445,7 +445,7 @@ class MiniCPMAttention(nn.Cell):
             )
 
         attn_weights = (
-                mint.matmul(query_states, key_states.transpose(2, 3)) * self.softmax_scale
+                mint.matmul(query_states, key_states.swapaxes(2, 3)) * self.softmax_scale
         )
 
         if attn_weights.shape != (bsz, self.num_heads, q_len, kv_seq_len):
@@ -476,7 +476,7 @@ class MiniCPMAttention(nn.Cell):
                 f" {attn_output.shape}"
             )
 
-        attn_output = attn_output.transpose(1, 2).contiguous()
+        attn_output = attn_output.swapaxes(1, 2).contiguous()
 
         attn_output = attn_output.reshape(bsz, q_len, self.num_heads * self.v_head_dim)
 
@@ -532,7 +532,7 @@ class MiniCPMFlashAttention2(MiniCPMAttention):
         bsz, q_len, _ = hidden_states.shape
 
         q = self.q_b_proj(self.q_a_layernorm(self.q_a_proj(hidden_states)))
-        q = q.view(bsz, q_len, self.num_heads, self.q_head_dim).transpose(1, 2)
+        q = q.view(bsz, q_len, self.num_heads, self.q_head_dim).swapaxes(1, 2)
         q_nope, q_pe = mint.split(
             q, [self.qk_nope_head_dim, self.qk_rope_head_dim], dim=-1
         )
@@ -544,11 +544,11 @@ class MiniCPMFlashAttention2(MiniCPMAttention):
         compressed_kv, k_pe = mint.split(
             compressed_kv, [self.kv_lora_rank, self.qk_rope_head_dim], dim=-1
         )
-        k_pe = k_pe.view(bsz, q_len, 1, self.qk_rope_head_dim).transpose(1, 2)
+        k_pe = k_pe.view(bsz, q_len, 1, self.qk_rope_head_dim).swapaxes(1, 2)
         kv = (
             self.kv_b_proj(self.kv_a_layernorm(compressed_kv))
             .view(bsz, q_len, self.num_heads, self.qk_nope_head_dim + self.v_head_dim)
-            .transpose(1, 2)
+            .swapaxes(1, 2)
         )
 
         k_nope, value_states = mint.split(
@@ -581,9 +581,9 @@ class MiniCPMFlashAttention2(MiniCPMAttention):
 
         # TODO: These transpose are quite inefficient but Flash Attention requires the layout [batch_size, sequence_length, num_heads, head_dim]. We would need to refactor the KV cache
         # to be able to avoid many of these transpose/reshape/view.
-        query_states = query_states.transpose(1, 2)
-        key_states = key_states.transpose(1, 2)
-        value_states = value_states.transpose(1, 2)
+        query_states = query_states.swapaxes(1, 2)
+        key_states = key_states.swapaxes(1, 2)
+        value_states = value_states.swapaxes(1, 2)
 
         dropout_rate = self.attention_dropout if self.training else 0.0
 
