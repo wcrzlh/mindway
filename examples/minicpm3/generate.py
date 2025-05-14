@@ -6,7 +6,7 @@ mindone_lib_path = os.path.abspath(os.path.join(__dir__, "../../"))
 sys.path.insert(0, mindone_lib_path)
 
 from transformers import AutoTokenizer
-from .modeling_minicpm import MiniCPM3ForCausalLM
+from modeling_minicpm import MiniCPM3ForCausalLM
 import mindspore as ms
 ms.set_seed(0)
 
