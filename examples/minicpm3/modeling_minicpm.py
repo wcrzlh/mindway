@@ -396,7 +396,7 @@ class MiniCPMAttention(nn.Cell):
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. Please make sure use `attention_mask` instead.`"
             )
 
-        bsz, q_len, _ = hidden_states.size()
+        bsz, q_len, _ = hidden_states.shape
 
         q = self.q_b_proj(self.q_a_layernorm(self.q_a_proj(hidden_states)))
         q = q.view(bsz, q_len, self.num_heads, self.q_head_dim).transpose(1, 2)
@@ -448,16 +448,16 @@ class MiniCPMAttention(nn.Cell):
                 mint.matmul(query_states, key_states.transpose(2, 3)) * self.softmax_scale
         )
 
-        if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
+        if attn_weights.shape != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
                 f"Attention weights should be of size {(bsz, self.num_heads, q_len, kv_seq_len)}, but is"
-                f" {attn_weights.size()}"
+                f" {attn_weights.shape}"
             )
         assert attention_mask is not None
         if attention_mask is not None:
-            if attention_mask.size() != (bsz, 1, q_len, kv_seq_len):
+            if attention_mask.shape != (bsz, 1, q_len, kv_seq_len):
                 raise ValueError(
-                    f"Attention mask should be of size {(bsz, 1, q_len, kv_seq_len)}, but is {attention_mask.size()}"
+                    f"Attention mask should be of size {(bsz, 1, q_len, kv_seq_len)}, but is {attention_mask.shape}"
                 )
             attn_weights = attn_weights + attention_mask
 
@@ -470,10 +470,10 @@ class MiniCPMAttention(nn.Cell):
         )
         attn_output = mint.matmul(attn_weights, value_states)
 
-        if attn_output.size() != (bsz, self.num_heads, q_len, self.v_head_dim):
+        if attn_output.shape != (bsz, self.num_heads, q_len, self.v_head_dim):
             raise ValueError(
                 f"`attn_output` should be of size {(bsz, self.num_heads, q_len, self.v_head_dim)}, but is"
-                f" {attn_output.size()}"
+                f" {attn_output.shape}"
             )
 
         attn_output = attn_output.transpose(1, 2).contiguous()
