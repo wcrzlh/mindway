@@ -245,9 +245,9 @@ class MiniCPMMLP(nn.Cell):
         self.config = config
         self.hidden_size = config.hidden_size
         self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
+        self.gate_proj = mint.nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
+        self.up_proj = mint.nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
+        self.down_proj = mint.nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
         self.act_fn = ACT2FN[config.hidden_act]
 
     def construct(self, x):
@@ -314,27 +314,27 @@ class MiniCPMAttention(nn.Cell):
 
         self.is_causal = True
 
-        self.q_a_proj = nn.Linear(
+        self.q_a_proj = mint.nn.Linear(
             self.hidden_size, config.q_lora_rank, bias=config.attention_bias
         )
         self.q_a_layernorm = MiniCPMRMSNorm(config.q_lora_rank)
-        self.q_b_proj = nn.Linear(
+        self.q_b_proj = mint.nn.Linear(
             config.q_lora_rank, self.num_heads * self.q_head_dim, bias=False
         )
-        self.kv_a_proj_with_mqa = nn.Linear(
+        self.kv_a_proj_with_mqa = mint.nn.Linear(
             self.hidden_size,
             config.kv_lora_rank + config.qk_rope_head_dim,
             bias=config.attention_bias,
         )
         self.kv_a_layernorm = MiniCPMRMSNorm(config.kv_lora_rank)
-        self.kv_b_proj = nn.Linear(
+        self.kv_b_proj = mint.nn.Linear(
             config.kv_lora_rank,
             self.num_heads
             * (self.q_head_dim - self.qk_rope_head_dim + self.v_head_dim),
             bias=False,
         )
 
-        self.o_proj = nn.Linear(
+        self.o_proj = mint.nn.Linear(
             self.num_heads * self.v_head_dim,
             self.hidden_size,
             bias=config.attention_bias,
@@ -1066,7 +1066,7 @@ class MiniCPM3ForCausalLM(MiniCPM3PreTrainedModel):
         super().__init__(config)
         self.model = MiniCPM3Model(config)
         self.vocab_size = config.vocab_size
-        self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+        self.lm_head = mint.nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -1285,7 +1285,7 @@ class MiniCPM3ForSequenceClassification(MiniCPM3PreTrainedModel):
         super().__init__(config)
         self.num_labels = config.num_labels
         self.model = MiniCPM3Model(config)
-        self.score = nn.Linear(config.hidden_size, self.num_labels, bias=False)
+        self.score = mint.nn.Linear(config.hidden_size, self.num_labels, bias=False)
 
         # Initialize weights and apply final processing
         self.post_init()
