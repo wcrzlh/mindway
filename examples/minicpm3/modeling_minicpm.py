@@ -21,7 +21,7 @@ from mindway.transformers.modeling_outputs import BaseModelOutputWithPast, Causa
 from mindway.transformers.modeling_utils import PreTrainedModel
 from mindway.transformers.mindspore_utils import ALL_LAYERNORM_LAYERS
 from transformers.utils import add_start_docstrings, add_start_docstrings_to_model_forward, logging, replace_return_docstrings
-from .configuration_minicpm import MiniCPM3Config
+from configuration_minicpm import MiniCPM3Config
 import re
 
 logger = logging.get_logger(__name__)
